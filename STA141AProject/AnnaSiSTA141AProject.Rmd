@@ -1,0 +1,24 @@
+---
+title: "STA141AProject"
+author: "Anna Si"
+date: "2024-03-05"
+output: html_document
+---
+
+```{r}
+# load packages
+library(tidyverse)
+library(dplyr)
+library(caret) 
+library(ROCR)
+
+# Load the data 
+session=list()
+for(i in 1:18){
+  session[[i]]=readRDS(paste('./Data/session',i,'.rds',sep=''))
+  }
+
+summary(session[[18]])
+
+```
+
