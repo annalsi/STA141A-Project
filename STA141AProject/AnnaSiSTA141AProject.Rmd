@@ -1,5 +1,5 @@
 ---
-title: "STA141AProject"
+title: "STA141A Final Project: Predicting the Feedback Type of a Mice Performing a Visual Discrimination Task"
 author: "Anna Si"
 date: "2024-03-05"
 output: 
@@ -444,7 +444,7 @@ trainIndex_log <- createDataPartition(predictive_dat_log$success, p = 0.8,list =
 train_df_log <- predictive_dat_log[trainIndex_log, ]
 test_df_log <- predictive_dat_log[-trainIndex_log, ]
 ```
-```{r}
+```{r echo=FALSE, message=FALSE}
 set.seed(119)
 fit1 <- glm(success ~ .,data = train_df_log, family="binomial")
 summary(fit1)
@@ -590,7 +590,7 @@ auroc1
   
   The accuracy of the test data on my xg boost model is 76%. However, looking at the area under the curve, it is only 69% which means the model is a poor fit for predicting feedback type. My xgboost model is predicts more false positives than actual negatives which may be the reason my data is not working. In addition, it predicts a few false negatives in comparison to its predicting power for positives.
 ## ## Model's performance on test data of session 18
-```{r session1test, echo=FALSE, message = FALSE}
+```{r session18test, echo=FALSE, message = FALSE}
 # split
 set.seed(119) # for reproducibility
 
@@ -630,9 +630,10 @@ auroc18
 ```
 
   The accuracy of the test data on my xg boost model is 69%. However, looking at the area under the curve, it is only 51% which means the model is a failed fit for predicting feedback type. My xgboost model is predicts a large amount of false positives than actual negatives which may be the reason my model is not working. In addition, it predicts a few false negatives in comparison to its predicting power for positives.
+
 # Section 6: Discussion
   My model explains that region spike rate, contrast diff, contrast left, contrast right, and identifiers of session and trial are key predictors in feedback type. Thus, as contrast diff increases, the feedback type is more likely to be a success. Furthermore, as region spike rates increase for specific areas, the mice is more likely to succeed. Finally, session and trial are key predictors since each mice/session has an inherent ability or willingness to complete the task at hand, and later trials are more difficult to get a successful response, potentially because the mice is less willing since they have been satiated and no longer need the water reward.
-  Based off the test data, the area under the curve from test1 for Session 1 was 0.69. Thus this is a poor model to use to predict whether a trial from session 1 will result in a success. In addition, the auc for test2 for Session 18 was 0.51 which is a failed model to predict whether a trial from session 18 will result in a success since it would be similar to guessing. Thus, my model is not accurate and it would be best to try a new model that would better predict the feedback type given the data or perhaps to create two separate models, using the respective data from session 1 and 18 to train two models.
+  Based off the test data, the area under the curve from test1 for Session 1 was 0.69 while my accuracy was 76%. Thus this is a poor model to use to predict whether a trial from session 1 will result in a success. In addition, the auc for test2 for Session 18 was 0.51 while accuracy was 69% which also suggests that the model is not great at predicting whether a trial from session 18 will result in a success since it would be similar to guessing. I hypothesize that the reason why my model did not function as well as it should have was because it predicted a large amount of false positives and almost no true negative values. However, while it did not reach as good as my test results which was 78% accuracy, I do think this model does work to predict feedback, just not that accurately, perhaps because we need more predictors that influence feedback type. Thus, my model is not as accurate as I would have liked and it would be best to try a new model that would better predict the feedback type given the data or perhaps to create two separate models, using the respective data from session 1 and 18 to train two models.
     
 
 # Appendix 
@@ -650,20 +651,13 @@ There is an outlier in session 4 which could lead to problems if used in trainin
 # average spike for successes
 average_spike_success <- full_tibble %>% filter(success == 1) %>% group_by( session_id,trail_id) %>% summarise(mean_spike = sum(region_sum_spike)/sum(region_count))
 
-ggplot(average_spike_success, aes(x = trail_id, y = mean_spike)) + 
-  geom_line()+
-  geom_smooth(method = "loess")+  # Fit a smooth spline
-
-  facet_wrap(~session_id) + labs(title = "Average Spike Rate for Successful Trials")
+ggplot(average_spike_success, aes(x = trail_id, y = mean_spike)) + geom_line()+ geom_smooth(method = "loess")+ facet_wrap(~session_id) + labs(title = "Average Spike Rate for Successful Trials")
 
 # average spike for failure trials
 average_spike_fail <- full_tibble %>% filter(success == 0) %>% group_by( session_id,trail_id) %>% summarise(mean_spike = sum(region_sum_spike)/sum(region_count))
 
-ggplot(average_spike_fail, aes(x = trail_id, y = mean_spike)) + 
-  geom_line()+
-  geom_smooth(method = "loess")+  # Fit a smooth spline
-
-  facet_wrap(~session_id) labs(title = "Average Spike Rate for Failure Trials")
+ggplot(average_spike_fail, aes(x = trail_id, y = mean_spike)) + geom_line() +
+  geom_smooth(method = "loess") + facet_wrap(~session_id) + labs(title = "Average Spike Rate for Failure Trials")
 ```
 Both success and fail trials follow the same pattern and have no distinct features.
 
@@ -681,6 +675,9 @@ c
 - Github link: https://github.com/annalsi/STA141A-Project.git
 - Spatiotemporal Spike Coding on Behavior: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4534466/
 - Using RMarkdown: https://bookdown.org/yihui/rmarkdown/html-document.html
+- Understanding PCA:
+  - https://hbctraining.github.io/DGE_workshop/lessons/principal_component_analysis.html#:~:text=These%20axes%20that%20represent%20the,which%20we%20could%20have%20variation.
+  - https://www.youtube.com/watch?v=3QwZ2GgHSLE
 
 
 
