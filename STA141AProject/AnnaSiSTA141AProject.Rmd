@@ -678,6 +678,7 @@ c
 ```
 
 # References
+- Github link: https://github.com/annalsi/STA141A-Project.git
 - Spatiotemporal Spike Coding on Behavior: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4534466/
 - Using RMarkdown: https://bookdown.org/yihui/rmarkdown/html-document.html
 
