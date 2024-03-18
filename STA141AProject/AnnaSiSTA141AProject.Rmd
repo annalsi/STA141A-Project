@@ -163,6 +163,7 @@ full_functional_tibble$success <- as.numeric(full_functional_tibble$success)
 ```
 ### Observing changes across sessions
  To start the exploratory data analysis, I created a table to summarize the information across sessions from the data. Then, I considered both of the TA's data processing techniques introduced in "Project Demo 2" since I found both neural activities reasonable in predicting feedback types. Research suggests that it may be that the spike pattern across the time bins, rather than average spike rate across trials, can indicate a successful trial (Reference 1). Thus, spatiotemporal patterns across trials might be an influential in model building for predicting behavior. 
+ 
   The first data processing technique defined neuronal activity as the mean spike rate per brain area. Once grouping trials and sessions by the brain_areas, I created a data frame with number of brain areas, total spikes in a brain area, and the mean spike rate in a brain region. The second data processing technique, is helpful when observing spatiotemporal patterns and defines neuronal activity as the spike rate for each time bin and creates a data frame with the spike rate for each of the 40 time bins. Both data frames also have variables contrast levels for the side, contrast difference, session id, trial id, name, and date.
 ```{r neuron-number, echo=FALSE}
 #neuron.n <- full_tibble %>% filter (trail_id==1) %>% group_by(session_id) %>% summarise(sum(region_count))
@@ -176,7 +177,9 @@ ggplot(data = full_tibble) +
 ```
   
   Furthermore, the number of neurons measured across sessions vary greatly, with session 4 having a major outlier at 1700 neurons (Appendix Figure 1). To further explore the heterogeneity, the data above shows that across sessions, the mean number of unique brain areas activated is nearly the same. As explained above, there are certain sessions with extreme outliers such as session 6. In addition, all of the sessions have larger variance differences for the region count showing that there is no consistency which would negatively impact the ability of my model to predict the feedback type. To combat this, both data processing techniques averaged the spike rate across all neurons in a trial. This prevents the specific number of neurons to cause issues in model building and allows us to create a single model to predict all trials. Although, it may be more accurate to create two models for session 1 and session 18 for our test data, ignoring the remaining sessions for training would lead to increased inaccuracies.
+  
   I will use both data processing methods in the exploratory data analysis to see which one would be more predictive before delving into data integration.
+  
   Furthermore, aside from neuron number changing across sessions, we can also see variables such as date, contrast levels, and success rate vary. Each session occurs at a different dates with varying contrast levels for right and left. Looking at the table above, the number of unique brain areas differs across sessions, although there are no outliers in the data. It appears that there is no relation between unique brain areas and success rate, since sessions with greater success rates do not necessarily have more unique brain areas. For instance, in session 17 there are only 6 brain areas with an 83% success, while session 16 also has 6 brain areas and 72% success, which may indicate that the number unique brain areas activated is not influential in predicting success rate. However, it may be that while the number of unique brain areas activated is not influential, but specific brain areas that are activated influence whether the behavior is a success. 
 
 ```{r brain-area, echo= FALSE}
@@ -285,6 +288,7 @@ percentages
 ```
   
   Based off the bar graph, the contrast difference distribution is not equal. 30% of the data is with a contrast difference of 0 while only 14% for differences of 0.25 and 0.75. This may indicate that success rate is dependent on the different distributions of contrast difference. Looking at the table showing contrast distributions for each mice, even though Cori has a similar distribution to Hench, their success rates are not close, 0.63 and 0.68 respectively. 
+  
   To further explain the question above, the bar graph shows that as contrast difference increases, the number of successful trials also increase. At contrast difference of 0, the mice is guessing which side to turn the wheel since both contrasts are equal. While at contrast level 1, there is the smallest proportion of failures since there is an obvious difference in contrasts. Thus if Cori, who has the highest proportion of high contrast levels (1 and 0.75) at 38%, has a much smaller success rate than Forssman and Lederberg who both have the greatest amount of low contrast levels (0 and 0.25) around 50%, the distribution of contrast difference should not affect success rate difference among mice.
 
 **The spike rate across time:**
@@ -365,6 +369,7 @@ ggplot(pc_df, aes(x = PC2, y = PC6, color = session_id)) +
 ```
 
   Looking at the PC2 vs PC6 graph, it seems that all the mice are explained by PC2 since the clusters are spread right on the x-axis. They all also seem to be explained slightly by PC6, but it is spread more so along pc2 rather than PC6, so PC2 might explain more of the mice clusters. Looking at the session clusters in the PC2 vs PC6 graph I find that session 1 and session 18 which are the test data sets are both concentrated in the same place across the graph. Thus, we can reasonably use one model to predict both of them since they both rely on the same principal components.
+  
   If we look at the contributions to PC2 which explains the greatest amount of variance it includes variables contrast left and contrast right (See Appendix Figure 4). PC6 which also explains 40%  of the variation, it includes session id, trail id, and region mean spike. PC1 explains only 7% of the data but does include region sum count. 
 
 # Section 3: Data Integration
@@ -401,7 +406,7 @@ test_X <- X[-trainIndex,]
 train_label <- label[trainIndex]
 test_label <- label[-trainIndex]
 ```
-```{r xg-boost-model, echo=FALSE}
+```{r xg-boost-model, echo=FALSE, message=FALSE}
 set.seed(119)
 xgb_model <- xgboost(data = train_X, label = train_label, objective = "binary:logistic", nrounds=10)
 
@@ -633,6 +638,7 @@ auroc18
 
 # Section 6: Discussion
   My model explains that region spike rate, contrast diff, contrast left, contrast right, and identifiers of session and trial are key predictors in feedback type. Thus, as contrast diff increases, the feedback type is more likely to be a success. Furthermore, as region spike rates increase for specific areas, the mice is more likely to succeed. Finally, session and trial are key predictors since each mice/session has an inherent ability or willingness to complete the task at hand, and later trials are more difficult to get a successful response, potentially because the mice is less willing since they have been satiated and no longer need the water reward.
+  
   Based off the test data, the area under the curve from test1 for Session 1 was 0.69 while my accuracy was 76%. Thus this is a poor model to use to predict whether a trial from session 1 will result in a success. In addition, the auc for test2 for Session 18 was 0.51 while accuracy was 69% which also suggests that the model is not great at predicting whether a trial from session 18 will result in a success since it would be similar to guessing. I hypothesize that the reason why my model did not function as well as it should have was because it predicted a large amount of false positives and almost no true negative values. However, while it did not reach as good as my test results which was 78% accuracy, I do think this model does work to predict feedback, just not that accurately, perhaps because we need more predictors that influence feedback type. Thus, my model is not as accurate as I would have liked and it would be best to try a new model that would better predict the feedback type given the data or perhaps to create two separate models, using the respective data from session 1 and 18 to train two models.
     
 
@@ -678,6 +684,77 @@ c
 - Understanding PCA:
   - https://hbctraining.github.io/DGE_workshop/lessons/principal_component_analysis.html#:~:text=These%20axes%20that%20represent%20the,which%20we%20could%20have%20variation.
   - https://www.youtube.com/watch?v=3QwZ2GgHSLE
+I heavily referenced the TA's Project Demo 1 and Demo 2 along with one of the Consulation Sessions.
+- Chat GPT Convo
+User
+how to plot roc curve for an xgboost model and logistic regression model in r
+
+ChatGPT
+In R, you can also plot ROC curves for models like XGBoost and logistic regression. You can use libraries like pROC for computing ROC curve metrics and ggplot2 for plotting. Here's a step-by-step guide to achieve this:
+
+Install Required Packages: First, if you haven't already, you need to install the necessary packages pROC and ggplot2.
+R
+Copy code
+install.packages("pROC")
+install.packages("ggplot2")
+Load Required Libraries: Load the required libraries into your R environment.
+R
+Copy code
+library(pROC)
+library(ggplot2)
+Train the Models: Train both the XGBoost and logistic regression models using your dataset.
+
+Predict Probabilities: Generate predicted probabilities for both models on a holdout dataset.
+
+Compute ROC Curve Metrics: Use the roc function from the pROC package to compute the ROC curve metrics for both models.
+
+Plot ROC Curve: Finally, use ggplot2 to plot the ROC curves for both models.
+
+Here's a code example:
+
+R
+Copy code
+ Assume you have already trained models and have test data
+ Here's an example with random data for illustration purposes
+
+ Generate random data
+set.seed(123)
+X <- matrix(rnorm(1000*20), ncol=20)
+y <- rbinom(1000, 1, 0.5)
+
+ Split data into train and test sets
+train_indices <- sample(1:nrow(X), 0.8*nrow(X))
+test_indices <- setdiff(1:nrow(X), train_indices)
+X_train <- X[train_indices,]
+y_train <- y[train_indices]
+X_test <- X[test_indices,]
+y_test <- y[test_indices]
+
+ Train logistic regression model
+log_reg_model <- glm(y_train ~ ., data=data.frame(cbind(y_train, X_train)), family=binomial)
+
+ Train XGBoost model (assuming you have installed the xgboost package)
+ install.packages("xgboost")
+library(xgboost)
+xgb_model <- xgboost(data = X_train, label = y_train, nrounds = 10, verbose = 0)
+
+ Predict probabilities for logistic regression
+y_pred_proba_lr <- predict(log_reg_model, newdata=data.frame(X_test), type="response")
+
+ Predict probabilities for XGBoost
+y_pred_proba_xgb <- predict(xgb_model, newdata = as.matrix(X_test))
+
+ Compute ROC curve metrics
+roc_lr <- roc(y_test, y_pred_proba_lr)
+roc_xgb <- roc(y_test, y_pred_proba_xgb)
+
+ Plot ROC curve
+plot_roc <- ggroc(list(Logistic_Regression = roc_lr, XGBoost = roc_xgb)) +
+  geom_abline(color="black", linetype="dashed") +
+  labs(title = "ROC Curve", x = "False Positive Rate", y = "True Positive Rate") +
+  theme_minimal()
+
+print(plot_roc)
 
 
 
